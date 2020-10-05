@@ -15,7 +15,7 @@ RUN set -ex \
         libxml2-dev \
 	libxslt-dev \
 	gstreamer1.0-plugins-bad \
-	pulseaudio
+	pulseaudio-utils
 
 RUN set -ex \
  && wget -q -O -  https://apt.mopidy.com/mopidy.gpg | apt-key add - \
@@ -45,23 +45,13 @@ COPY entrypoint.sh /entrypoint.sh
 # Default configuration.
 COPY mopidy.conf /config/mopidy.conf
 
+# Copy the pulse-client configuratrion.
 COPY pulse-client.conf /etc/pulse/client.conf
 
-ENV UNAME=mopidy
-
-# Set up the user
-RUN export UNAME=$UNAME UID=1000 GID=1000 && \
-    mkdir -p "/home/${UNAME}" && \
-    echo "${UNAME}:x:${UID}:${GID}:${UNAME} User,,,:/home/${UNAME}:/bin/bash" >> /etc/passwd && \
-    echo "${UNAME}:x:${UID}:" >> /etc/group && \
-    mkdir -p /etc/sudoers.d && \
-    echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} && \
-    chmod 0440 /etc/sudoers.d/${UNAME} && \
-    chown ${UID}:${GID} -R /home/${UNAME} && \
-    gpasswd -a ${UNAME} audio
-
-ENV HOME /home/mopidy
+# Allows any user to run mopidy, but runs by default as a randomly generated UID/GID.
+ENV HOME=/var/lib/mopidy
 RUN set -ex \
+ && usermod -G audio,sudo mopidy \
  && chown mopidy:audio -R $HOME /entrypoint.sh \
  && chmod go+rwx -R $HOME /entrypoint.sh
 
