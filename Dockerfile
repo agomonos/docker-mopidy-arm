@@ -13,7 +13,9 @@ RUN set -ex \
         python3-distutils \
         python3-pip \
         libxml2-dev \
- 	libxslt-dev
+	libxslt-dev \
+	gstreamer1.0-plugins-bad \
+	pulseaudio
 
 RUN set -ex \
  && wget -q -O -  https://apt.mopidy.com/mopidy.gpg | apt-key add - \
@@ -21,18 +23,17 @@ RUN set -ex \
  && apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         mopidy \
-        mopidy-soundcloud \
-        mopidy-spotify \
         mopidy-mpd \
-        mopidy-alsamixer \
-        mopidy-local
+        mopidy-local \
+	mopidy-soundcloud \
+	mopidy-spotify
 
 RUN set -ex \
  && apt-get install -y \
 	python3-lxml \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache \
- && python3 -m pip install Mopidy-YouTube Mopidy-Iris Mopidy-Moped Mopidy-GMusic Mopidy-Pandora Mopidy-YouTube
+ && python3 -m pip install Mopidy-YouTube Mopidy-Iris Mopidy-Pandora Mopidy-MusicBox-Webclient
 
 RUN set -ex \
  && mkdir -p /var/lib/mopidy/.config \
@@ -44,10 +45,21 @@ COPY entrypoint.sh /entrypoint.sh
 # Default configuration.
 COPY mopidy.conf /config/mopidy.conf
 
-# Allows any user to run mopidy, but runs by default as a randomly generated UID/GID.
-ENV HOME=/var/lib/mopidy
+ENV UNAME=mopidy
+
+# Set up the user
+RUN export UNAME=$UNAME UID=1000 GID=1000 && \
+    mkdir -p "/home/${UNAME}" && \
+    echo "${UNAME}:x:${UID}:${GID}:${UNAME} User,,,:/home/${UNAME}:/bin/bash" >> /etc/passwd && \
+    echo "${UNAME}:x:${UID}:" >> /etc/group && \
+    mkdir -p /etc/sudoers.d && \
+    echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} && \
+    chmod 0440 /etc/sudoers.d/${UNAME} && \
+    chown ${UID}:${GID} -R /home/${UNAME} && \
+    gpasswd -a ${UNAME} audio
+
+ENV HOME /home/mopidy
 RUN set -ex \
- && usermod -G audio,sudo mopidy \
  && chown mopidy:audio -R $HOME /entrypoint.sh \
  && chmod go+rwx -R $HOME /entrypoint.sh
 
