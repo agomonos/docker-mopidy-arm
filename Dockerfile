@@ -33,7 +33,7 @@ RUN set -ex \
 	python3-lxml \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache \
- && python3 -m pip install Mopidy-YouTube Mopidy-Iris Mopidy-Pandora Mopidy-MusicBox-Webclient
+ && python3 -m pip install Mopidy-YouTube Mopidy-Iris Mopidy-Pandora Mopidy-MusicBox-Webclient Mopidy-YTMusic
 
 RUN set -ex \
  && mkdir -p /var/lib/mopidy/.config \
@@ -44,6 +44,8 @@ COPY entrypoint.sh /entrypoint.sh
 
 # Default configuration.
 COPY mopidy.conf /config/mopidy.conf
+
+COPY pulse-client.conf /etc/pulse/client.conf
 
 ENV UNAME=mopidy
 
