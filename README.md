@@ -10,12 +10,12 @@ Features of this image
 
   * Follows [official installation](https://docs.mopidy.com/en/latest/installation/debian/) on top of [Debian](https://registry.hub.docker.com/_/debian/).
   * With backend extensions for:
-      * [Mopidy-Spotify](https://docs.mopidy.com/en/latest/ext/backends/#mopidy-spotify) for **[Spotify](https://www.spotify.com/us/)** (Premium)
-      * [Mopidy-GMusic](https://docs.mopidy.com/en/latest/ext/backends/#mopidy-gmusic) for **[Google Play Music](https://play.google.com/music/listen)**
-      * [Mopidy-SoundClound](https://docs.mopidy.com/en/latest/ext/backends/#mopidy-soundcloud) for **[SoundCloud](https://soundcloud.com/stream)**
-      * [Mopidy-Pandora](https://github.com/rectalogic/mopidy-pandora) for **[Pandora](https://www.pandora.com/)**
-      * [Mopidy-YouTube](https://docs.mopidy.com/en/latest/ext/backends/#mopidy-youtube) for **[YouTube](https://www.youtube.com)**
-  * With [Mopidy-Moped](https://docs.mopidy.com/en/latest/ext/web/#mopidy-moped) web extension.
+      * [Mopidy-Spotify](https://mopidy.com/ext/spotify/) for **[Spotify](https://www.spotify.com/us/)** (Premium)
+      * [Mopidy-SoundClound](https://mopidy.com/ext/soundcloud/) for **[SoundCloud](https://soundcloud.com/stream)**
+      * [Mopidy-Pandora](https://mopidy.com/ext/pandora/) for **[Pandora](https://www.pandora.com/)**
+      * [Mopidy-YouTube](https://mopidy.com/ext/youtube/) for **[YouTube](https://www.youtube.com)**
+  * With [Mopidy-MusicBox-Webclient](https://mopidy.com/ext/musicbox-webclient/) web extension.
+  * With [Mopidy-Iris](https://mopidy.com/ext/iris/) web extension.
   * Can run as any user and runs as UID/GID `84044` user inside the container by default (for security reasons).
 
 You may install additional [backend extensions](https://docs.mopidy.com/en/latest/ext/backends/).
@@ -36,7 +36,7 @@ Simplest is by adding docker argument: `--device /dev/snd`. Try via:
 
     $ docker run --rm \
         --user root --device /dev/snd \
-        wernight/mopidy \
+        mopidy \
         gst-launch-1.0 audiotestsrc ! audioresample ! autoaudiosink
 
 #### PulseAudio native
@@ -46,7 +46,7 @@ Based on https://github.com/TheBiggerGuy/docker-pulseaudio-example.
 
     $ docker run --rm \
         --user $UID:$GID -v /run/user/$UID/pulse:/run/user/105/pulse \
-        wernight/mopidy \
+        mopidy \
         gst-launch-1.0 audiotestsrc ! audioresample ! autoaudiosink
 
 #### PulseAudio over network
@@ -82,7 +82,7 @@ Example to check it works:
     $ docker run --rm \
         -e "PULSE_SERVER=tcp:$(hostname -i):4713" \
         -e "PULSE_COOKIE_DATA=$(pax11publish -d | grep --color=never -Po '(?<=^Cookie: ).*')" \
-        wernight/mopidy \
+        mopidy \
         gst-launch-1.0 audiotestsrc ! audioresample ! autoaudiosink
 
 ### General usage
@@ -93,7 +93,7 @@ Example to check it works:
         -v "$PWD/local:/var/lib/mopidy/local" \
         -p 6600:6600 -p 6680:6680 \
         --user $UID:$GID \
-        wernight/mopidy \
+        mopidy \
         mopidy \
         -o spotify/username=USERNAME -o spotify/password=PASSWORD \
         -o gmusic/username=USERNAME -o gmusic/password=PASSWORD \
@@ -116,7 +116,6 @@ Most arguments are optional (see some examples below):
   * Mopidy arguments (see [mopidy's command](https://docs.mopidy.com/en/latest/command/) for possible additional options),
     replace `USERNAME`, `PASSWORD`, `TOKEN` accordingly if needed, or disable services (e.g., `-o spotify/enabled=false`):
       * For *Spotify* you'll need a *Premium* account.
-      * For *Google Music* use your Google account (if you have *2-Step Authentication*, generate an [app specific password](https://security.google.com/settings/security/apppasswords)).
       * For *SoundCloud*, just [get a token](https://www.mopidy.com/authenticate/) after registering.
 
 NOTE: Any user on your system may run `ps aux` and see the command-line you're running, so your passwords may be exposed.
@@ -160,7 +159,7 @@ Then run it:
         -v "$PWD/mopidy.conf:/config/mopidy.conf" \
         -p 6600:6600 -p 6680:6680 \
         --user $UID:$GID \
-        wernight/mopidy
+        mopidy
 
 
 ##### Example using HTTP client to stream local files
@@ -173,7 +172,7 @@ Then run it:
             -v "$PWD/media:/var/lib/mopidy/media:ro" \
             -v "$PWD/local:/var/lib/mopidy/local" \
             -p 6680:6680 \
-            wernight/mopidy mopidy local scan
+            mopidy mopidy local scan
 
  3. Start the server:
 
@@ -183,25 +182,9 @@ Then run it:
             -v "$PWD/media:/var/lib/mopidy/media:ro" \
             -v "$PWD/local:/var/lib/mopidy/local" \
             -p 6680:6680 \
-            wernight/mopidy
+            mopidy
 
  4. Browse to http://localhost:6680/
-
-#### Example using [ncmpcpp](https://docs.mopidy.com/en/latest/clients/mpd/#ncmpcpp) MPD console client
-
-    $ docker run --name mopidy -d \
-        -v /run/user/$UID/pulse:/run/user/105/pulse \
-        wernight/mopidy
-    $ docker run --rm -it --net container:mopidy wernight/ncmpcpp ncmpcpp
-
-Alternatively if you don't need visualizers you can do:
-
-    $ docker run --rm -it --link mopidy:mopidy wernight/ncmpcpp ncmpcpp --host mopidy
-
-
-### Feedbacks
-
-Having more issues? [Report a bug on GitHub](https://github.com/wernight/docker-mopidy/issues). Also if you need some additional extensions/plugins that aren't already installed (please explain why).
 
 
 ### Alsa Audio
